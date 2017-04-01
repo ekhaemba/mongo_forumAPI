@@ -13,24 +13,25 @@ var app = express()
 var router = express.Router()
 router.use(bodyParser.json());
 
-var dbName = "mongodb://localhost/db"
-var port = 8080
+const dbName = "mongodb://localhost/db"
+const port = 8080
 mongoose.connect(dbName)
 mongoose.Promise = global.Promise
 var db = mongoose.connection
 
-var createDoc = modelFunctions.createDoc
-var findDocs = modelFunctions.findDocs
-var findOneDoc = modelFunctions.findOneDoc
-var populateDoc = modelFunctions.populateDoc
-var updateDoc = modelFunctions.updateDoc
-var deleteDoc = modelFunctions.deleteDoc
+const createDoc = modelFunctions.createDoc,
+findDocs = modelFunctions.findDocs,
+findOneDoc = modelFunctions.findOneDoc,
+populateDoc = modelFunctions.populateDoc,
+populateOneDoc = modelFunctions.populateOneDoc,
+updateDoc = modelFunctions.updateDoc,
+deleteDoc = modelFunctions.deleteDoc
 
 var userModel = userMongoose.userModel
 var commentModel = commentMongoose.commentModel
 var forumModel = forumMongoose.forumModel
 
-var catchErrors = function(error_code){
+const catchErrors = function(error_code){
   switch (error_code) {
     case 11000:
       return "Duplicate values"
@@ -46,6 +47,48 @@ router.get("/user",function(req,res){
   })
 })
 
+//Get all comments in the database
+.get("/comments",function(req,res){
+  populateDoc({}, "-__v", { path:"user",select:"-_id -__v" }, commentModel, function(results){
+    res.json(results)
+  })
+})
+
+//Get all comments by a given user
+.get("/comments/user/:userId",function(req,res){
+  populateDoc({user:req.params.userId}, "-__v", { path:"user", select:"-_id -__v"}, commentModel, function(results){
+    res.json(results)
+  })
+})
+
+//Get a comment by commentId
+.get("/comments/:commentId",function(req,res){
+  populateOneDoc({_id:req.params.commentId}, "-__v", {path:"user",select:"-_id -__v"}, commentModel, function(results){
+    res.json(results)
+  })
+})
+
+//Get all forums in the database
+.get("/forum",function(req,res){                                //Populate the comments' user reference
+  populateDoc({},"-__v", { path: 'comments', select: "-_id -__v", populate: { path: 'user', select: "-_id -__v" } }, forumModel, function(results){
+    res.json(results)
+  })
+})
+
+//Get a specific forum
+.get("/forum/:forumId",function(req,res){                                             //Populate the comments' user reference
+  populateOneDoc({_id:req.params.forumId},"-__v", { path: 'comments', select: "-_id -__v", populate: { path: 'user', select: "-_id -__v" } }, forumModel, function(results){
+    res.json(results)
+  })
+})
+
+//Get all of the comments in a specific forum
+.get("/forum/:forumId/comments",function(req,res){
+  populateOneDoc({ _id:req.params.forumId }, {comments : 1, _id : 0}, { path: 'comments', select: {comment : 1, user : 1, _id : 0}, populate: { path: 'user', select: {username : 1, _id : 0} } }, forumModel, function(results){
+    res.json(results)
+  })
+})
+
 //Post new user to database
 .post("/user",function(req, res){
   createDoc(req.body, userModel, function(results){
@@ -53,31 +96,10 @@ router.get("/user",function(req,res){
   })
 })
 
-//Get all comments
-.get("/comments",function(req,res){
-  populateDoc({}, "-__v", { path:"user",select:"-_id -__v" }, commentModel, function(results){
-    res.json(results)
-  })
-})
-
 //Post new comment to database
 .post("/comments",function(req,res){
   createDoc(req.body, commentModel, function(results){
     results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json({ commentId: results._id })
-  })
-})
-
-//Get comments by userId
-.get("/comments/user/:userId",function(req,res){
-  populateDoc({user:req.params.userId}, "-__v", { path:"user", select:"-_id -__v"}, commentModel, function(results){
-    res.json(results)
-  })
-})
-
-//Get comment by commentId
-.get("/comments/:commentId",function(req,res){
-  populateDoc({_id:req.params.commentId}, "-__v", {path:"user",select:"-_id -__v"}, commentModel, function(results){
-    res.json(results)
   })
 })
 
@@ -100,20 +122,6 @@ router.get("/user",function(req,res){
           results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json({commentId: newComment._id})
       })
     }
-  })
-})
-
-//Get all forums
-.get("/forum",function(req,res){                                //Populate the comments' user reference
-  populateDoc({},"-__v", { path: 'comments', select: "-_id -__v", populate: { path: 'user', select: "-_id -__v" } }, forumModel, function(results){
-    res.json(results)
-  })
-})
-
-//Get a specific forum
-.get("/forum/:forumId",function(req,res){                                             //Populate the comments' user reference
-  populateDoc({_id:req.params.forumId},"-__v", { path: 'comments', select: "-_id -__v", populate: { path: 'user', select: "-_id -__v" } }, forumModel, function(results){
-    res.json(results)
   })
 })
 

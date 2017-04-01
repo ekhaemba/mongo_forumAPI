@@ -32,6 +32,18 @@ var populateDoc = function(filter, select,  populateQuery, model, callback){
   })
 }
 
+var populateOneDoc = function(filter, select,  populateQuery, model, callback){
+  model.findOne(filter, select).populate(populateQuery).exec(function(err, documents){
+    if (!err){
+      callback(documents);
+    }
+    else{
+      console.log("Error",err)
+      callback({ error_code: err.code})
+    }
+  })
+}
+
 var findOneDoc = function( filter, model, callback){
   model.findOne(filter).exec(function(err, docs){
     if(err){
@@ -67,6 +79,7 @@ var deleteDoc = function(id, model, callback){
 module.exports = {
   createDoc : createDocument,
   populateDoc : populateDoc,
+  populateOneDoc : populateOneDoc,
   findDocs : findDocs,
   findOneDoc : findOneDoc,
   updateDoc : updateDoc,
