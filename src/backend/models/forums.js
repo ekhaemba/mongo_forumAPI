@@ -8,7 +8,16 @@ var forumSchema = new Schema({
   },
   topicId : Schema.ObjectId,
   comments : [{type: Schema.ObjectId,
-  ref : 'Comment'}]
+  ref : 'Comment'}],
+  createdBy:{
+    type: Schema.ObjectId,
+    ref:'User',
+    require:true
+  },
+  moderators:[{
+    type: Schema.ObjectId,
+    ref:'User'
+  }]
 },
 {
   timestamps : true
