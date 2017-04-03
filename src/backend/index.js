@@ -5,7 +5,7 @@ var bodyParser = require('body-parser')
 var userMongoose = require('./models/user')
 var commentMongoose = require('./models/comment')
 var forumMongoose = require('./models/forums')
-
+var morgan = require('morgan')
 var modelFunctions = require('./modelFunctions/modelFunc')
 
 
@@ -41,6 +41,7 @@ const catchErrors = function(error_code){
 }
 
 //Get all users
+//Should be authenticated access but open as of now
 router.get("/user",function(req,res){
   findDocs({}, "-__v", userModel, function(results){
     res.json(results)
@@ -68,7 +69,7 @@ router.get("/user",function(req,res){
   })
 })
 
-//Get all forums in the database
+//Get all forums in the database as JSON
 .get("/forum",function(req,res){                                //Populate the comments' user reference
   populateDoc({},"-__v", { path: 'comments', select: "-_id -__v", populate: { path: 'user', select: "-_id -__v" } }, forumModel, function(results){
     res.json(results)
@@ -83,6 +84,7 @@ router.get("/user",function(req,res){
 })
 
 //Get all of the comments in a specific forum
+//Returns all of the comments as JSON
 .get("/forum/:forumId/comments",function(req,res){
   populateOneDoc({ _id:req.params.forumId }, {comments : 1, _id : 0}, { path: 'comments', select: {comment : 1, user : 1, _id : 0}, populate: { path: 'user', select: {username : 1, _id : 0} } }, forumModel, function(results){
     res.json(results)
@@ -90,6 +92,7 @@ router.get("/user",function(req,res){
 })
 
 //Post new user to database
+//Example usage: User registration, creates a new user account
 .post("/user",function(req, res){
   createDoc(req.body, userModel, function(results){
     results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json({ userId: results._id })
@@ -97,20 +100,23 @@ router.get("/user",function(req,res){
 })
 
 //Post new comment to database
+//Generic posting to test if the model works as intended
 .post("/comments",function(req,res){
   createDoc(req.body, commentModel, function(results){
     results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json({ commentId: results._id })
   })
 })
 
-//Post a new forum topic
+//Post a new forum topic given the user has been authenticated
+//Example usage: Creating a new forum given the user is authenticated
 .post("/forum",function(req,res){
   createDoc(req.body, forumModel, function(results){
       results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json({ forumId: results._id })
   })
 })
 
-//Add new comment to a forum
+//Add new comment to a forum given a forum Id
+//Example usage: Adding a comment on the forum as a particular user given the user is authenticated
 .post("/forum/:forumId/newComment",function(req,res){
   var newComment = new commentModel(req.body)//Create a new instance of the comment object using the model
   newComment.save(function(err,newComment){
@@ -125,19 +131,22 @@ router.get("/user",function(req,res){
   })
 })
 
-//Delete a forum
+//Delete a forum given a forum Id
+//Example usage: Deleting the forum given the user who created or is moderating the forum has been authenticated
 .delete("/forum/:forumId",function(req,res){
   deleteDoc(req.params.forumId, forumModel, function(results){
     results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json(results)
   })
 })
-//Delete a user
+//Delete a user given a userId
+//Example usage: Deleting a user given the user has been authenticated
 .delete("/user/:userId",function(req,res){
   deleteDoc(req.params.userId, userModel, function(results){
     results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json(results)
   })
 })
-//Delete a comment
+//Delete a comment given a comment Id
+//Example usage: Deleting a comment given the user who made the comment has been authenticated
 .delete("/comment/:commentId",function(req,res){
   deleteDoc(req.params.commentId, commentModel, function(results){
     results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json(results)
@@ -145,6 +154,7 @@ router.get("/user",function(req,res){
 })
 
 //Updates the forum properties given a forum Id
+//Example usage: Editing the forum topic, or updating the list of moderators given the user who created or is moderating the forum has been authenticated
 .put("/forum/:forumId",function(req, res){
   updateDoc({ $set : req.body}, req.params.forumId, forumModel, function(results){
     res.json(results)
@@ -152,6 +162,7 @@ router.get("/user",function(req,res){
 })
 
 //Updates the comment properties given a certain comment Id
+//Example usage: Editing a comment, given that the user who made the comment has been authenticated
 .put("/comment/:commentId",function(req, res){
   updateDoc({ $set : req.body}, req.params.commentId, commentModel, function(results){
     res.json(results)
@@ -159,11 +170,17 @@ router.get("/user",function(req,res){
 })
 
 //Updates a certain user properties given a certain user Id
+//Example usage: Editing a user profile given that the user has been authenticated
 .put("/user/:userId",function(req, res){
   updateDoc({ $set : req.body}, req.params.userId, userModel, function(results){
     res.json(results)
   })
 })
 
+
+//Morgan middleware to log all requests made to the server
+app.use(morgan('combined'))
+//Use the router
 app.use(router)
+
 app.listen(port)
