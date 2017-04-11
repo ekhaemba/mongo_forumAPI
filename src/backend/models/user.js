@@ -2,6 +2,10 @@ var mongoose = require('mongoose')
 var Schema = mongoose.Schema
 var bcrypt = require('bcrypt')
 
+const ROLE_ADMIN = require("../helpers/constants").ROLE_ADMIN,
+      ROLE_MODERATOR = require("../helpers/constants").ROLE_MODERATOR,
+      ROLE_USER = require("../helpers/constants").ROLE_USER
+
 var userSchema = new Schema({
   userId: Schema.ObjectId,
   username : {
@@ -12,6 +16,11 @@ var userSchema = new Schema({
   password : {
     type:String,
     required : true
+  },
+  role:{
+    type: String,
+    enum : [ROLE_ADMIN, ROLE_MODERATOR, ROLE_USER],
+    default : ROLE_USER
   }
 },
 { timestamps : true })
@@ -39,7 +48,6 @@ userSchema.pre('save', function(next) {
 userSchema.methods.comparePassword = function(candidatePassword, cb) {  
   bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
     if (err) { return cb(err); }
-
     cb(null, isMatch);
   });
 }

@@ -13,11 +13,7 @@ var forumSchema = new Schema({
     type: Schema.ObjectId,
     ref:'User',
     require:true
-  },
-  moderators:[{
-    type: Schema.ObjectId,
-    ref:'User'
-  }]
+  }
 },
 {
   timestamps : true

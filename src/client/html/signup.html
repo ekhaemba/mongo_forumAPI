@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+    <title>Node Authentication</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"> <!-- load bootstrap css -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"> <!-- load fontawesome -->
+    <style>
+        body        { padding-top:80px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<div class="col-sm-5 col-sm-offset-2">
+
+    <h1><span class="fa fa-caret-square-o-right"></span> Signup</h1>
+
+    
+    <!-- LOGIN FORM -->
+    <form action="/signup" method="post">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" class="form-control" name="username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" class="form-control" name="password" id="pwd">
+        </div>
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" class="form-control" name="password" id="confirm_pwd" >
+        </div>
+        <!-- check if passwords match? -->
+        <script>
+    
+    function myFunction() {
+        var pass1 = document.getElementById("pwd").value;
+        var pass2 = document.getElementById("confirm_pwd").value;
+        if (pass1 != pass2) {
+            alert("Passwords Do not match");
+            document.getElementById("pwd").style.borderColor = "#E34234";
+            document.getElementById("confirm_pwd").style.borderColor = "#E34234";
+        }
+        
+    }
+        </script>
+        <button type="submit" class="btn btn-link">Signup</button>
+    </form>
+
+    <hr>
+
+    <p>Already have an account? <a href="/login">Login</a></p>
+    <p>Or go <a href="/">home</a>.</p>
+
+</div>
+
+</div>
+</body>
+</html>

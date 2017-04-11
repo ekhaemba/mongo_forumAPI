@@ -1,79 +1,35 @@
-var mongoose = require('mongoose')
+const mongoose = require('mongoose')
 
-var createDocument = function(document, model, callback){
-  model.create(document, function(err, document){
-    if(!err){
-      callback(document);
-    }
-    else{
-      console.log("Error",err)
-      callback({ error_code: err.code})
-    }
-  });
+const createDocument = function(document, model, callback){
+  model.create(document, callback);
 };
 
-var findDocs = function(filter, select, model, callback){
-  model.find(filter, select).exec(function(err, documents){
-    if (!err){
-      callback(documents);
-    }
-  });
+const findDocs = function(filter, select, model, callback){
+  model.find(filter, select).exec(callback);
 };
 
-var populateDoc = function(filter, select,  populateQuery, model, callback){
-  model.find(filter, select).populate(populateQuery).exec(function(err, documents){
-    if (!err){
-      callback(documents);
-    }
-    else{
-      console.log("Error",err)
-      callback({ error_code: err.code})
-    }
-  })
+const populateDoc = function(filter, select,  populateQuery, model, callback){
+  model.find(filter, select).populate(populateQuery).exec(callback)
 }
 
-var populateOneDoc = function(filter, select,  populateQuery, model, callback){
-  model.findOne(filter, select).populate(populateQuery).exec(function(err, documents){
-    if (!err){
-      callback(documents);
-    }
-    else{
-      console.log("Error",err)
-      callback({ error_code: err.code})
-    }
-  })
+const populateOneDoc = function(filter, select,  populateQuery, model, callback){
+  model.findOne(filter, select).populate(populateQuery).exec(callback)
 }
 
-var findOneDoc = function( filter, model, callback){
-  model.findOne(filter).exec(function(err, docs){
-    if(err){
-      console.log(err)
-    }else{
-      callback(docs)
-    }
-  })
+const findOneDoc = function( filter, select, model, callback){
+  model.findOne(filter, select).exec(callback)
 }
 
-var updateDoc = function(changes, id, model, callback){
-  model.update({_id: id}, changes, function(err, document){
-    if (!err){
-      callback(document);
-    }
-    else{
-      callback({error_code:err.code})
-    }
-  });
+const updateDoc = function( id, changes, select,  model, callback){
+  model.findByIdAndUpdate(id, { $set : changes}, {select:select}, callback)
 };
 
-var deleteDoc = function(id, model, callback){
-  model.findByIdAndRemove(id, function(err, document){
-    if (!err){
-      callback(document);
-    }
-    else{
-      callback({error_code:err.code})
-    }
-  });
+const updatePushDoc = function( id, changes, select,  model, callback){
+  model.findByIdAndUpdate(id, { $push : changes}, {select:select}, callback)
+};
+
+const deleteDoc = function(id, model, callback){
+  model.findByIdAndRemove(id, callback);
 };
 
 module.exports = {
@@ -83,5 +39,6 @@ module.exports = {
   findDocs : findDocs,
   findOneDoc : findOneDoc,
   updateDoc : updateDoc,
+  updatePushDoc : updatePushDoc,
   deleteDoc : deleteDoc
 }
