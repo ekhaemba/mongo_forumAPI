@@ -1,61 +1,56 @@
 const express = require("express");
+const passport = require("passport")
 
-const populateDoc = require("../modelFunctions/modelFunc").populateDoc
-const populateOneDoc = require("../modelFunctions/modelFunc").populateOneDoc
-const createDoc = require("../modelFunctions/modelFunc").createDoc
+//Model Function imports
 const deleteDoc = require("../modelFunctions/modelFunc").deleteDoc
 const updateDoc = require("../modelFunctions/modelFunc").updateDoc
+const populateDoc = require("../modelFunctions/modelFunc").populateDoc
+const populateOneDoc = require("../modelFunctions/modelFunc").populateOneDoc
 
-
+//The comment model
 const commentModel = require("../models/comment").commentModel
 
+//The MAC roles
+const ROLE_ADMIN = require("../helpers/constants").ROLE_ADMIN,
+      ROLE_MODERATOR = require("../helpers/constants").ROLE_MODERATOR,
+      ROLE_USER = require("../helpers/constants").ROLE_USER
+      
+//Helper stuff
 const catchErrors = require("../helpers/helper_funcs").catchErrors
+const roleAuth = require("../controllers/auth_controllers").roleAuthorization
 
-var commentRoutes = express.Router();
-var exportRoutes = express.Router();
-//Get all comments in the database
-commentRoutes.get("",function(req,res){
-  populateDoc({}, "-__v", { path:"user",select:"-_id -__v" }, commentModel, function(results){
-    res.json(results)
-  })
-})
+//Necessary callback generators
+const commentFindCallback = require("../controllers/mongoose_controllers").commentFindCallback
+const commentDeleteCallback = require("../controllers/mongoose_controllers").commentDeleteCallback
+const commentUpdateCallback = require("../controllers/mongoose_controllers").commentUpdateCallback
+
+//Routers Declaration
+const commentRoutes = express.Router(), exportRoutes = express.Router()
+
+//populateQuery global const
+const populateUserQuery = { path:"user", select:"-_id -__v -password"}
 
 //Get all comments by a given user
-.get("/user/:userId",function(req,res){
-  populateDoc({user:req.params.userId}, "-__v", { path:"user", select:"-_id -__v"}, commentModel, function(results){
-    res.json(results)
-  })
+commentRoutes.get("/user/:userId",function(req,res){
+  populateDoc({ user:req.params.userId }, "-__v", populateUserQuery, commentFindCallback(req,res, `Found comments by user ${req.params.userId}`))
 })
 
 //Get a comment by commentId
 .get("/:commentId",function(req,res){
-  populateOneDoc({_id:req.params.commentId}, "-__v", {path:"user",select:"-_id -__v"}, commentModel, function(results){
-    res.json(results)
-  })
+  populateOneDoc({_id:req.params.commentId}, "-__v", populateUserQuery, commentModel, commentFindCallback(req,res,null))
 })
 
-//Post new comment to database
-//Generic posting to test if the model works as intended
-.post("",function(req,res){
-  createDoc(req.body, commentModel, function(results){
-    results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json({ commentId: results._id })
-  })
-})
 
 //Delete a comment given a comment Id
 //Example usage: Deleting a comment given the user who made the comment has been authenticated
 .delete("/:commentId",function(req,res){
-  deleteDoc(req.params.commentId, commentModel, function(results){
-    results.error_code ? res.json({error : catchErrors(results.error_code)}) : res.json(results)
-  })
+  deleteDoc(req.params.commentId, commentModel, commentDeleteCallback(req,res,null))
 })
 
 //Updates the comment properties given a certain comment Id
 //Example usage: Editing a comment, given that the user who made the comment has been authenticated
 .put("/:commentId",function(req, res){
-  updateDoc({ $set : req.body}, req.params.commentId, commentModel, function(results){
-    res.json(results)
-  })
+  updateDoc(req.params.commentId, {comment:req.body.comment}, "comment -_id", commentModel, commentUpdateCallback(req,res,null))
 })
 
 exportRoutes.use("/comment",commentRoutes)

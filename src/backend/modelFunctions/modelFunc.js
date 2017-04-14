@@ -1,4 +1,16 @@
+//Helper mongoose model functions
 const mongoose = require('mongoose')
+//Common keywords
+/*
+document = The document to be added
+model = The mongoose model you are mapping the document to
+callback = The callback function to do after execution
+select = What you want to select in the document
+populateQuery = What and how you want to populate object references in the model
+id = The objectId you want search for
+changes = The changes you want to make to the document (Field must exist first)
+*/
+
 
 const createDocument = function(document, model, callback){
   model.create(document, callback);

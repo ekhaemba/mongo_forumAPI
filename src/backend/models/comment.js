@@ -1,9 +1,10 @@
 var mongoose = require('mongoose')
 var Schema = mongoose.Schema
 
+//The comment Schema of how the model is mapped
 var commentSchema = new Schema({
   commentId: Schema.ObjectId,
-  comment : String,
+  comment: String,
   user :{
       type: Schema.ObjectId,
       ref : 'User'

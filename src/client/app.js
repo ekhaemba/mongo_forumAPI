@@ -1,57 +1,68 @@
-// var username;
-
-// $(".dropdown-menu li a").click(function(){
-//   $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="caret"></span>');
-//   $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
-//     username= $(this).data('value');
-    
-//   console.log(username);
-// });
-// function setusername(){
-//   $('#username').html('Author: '+username);
-// }
-
-var username = $('#user').html();
-console.log(username);
+// var username = $('#user').html();
+// console.log(username);
 
 
-var thisView = angular.module('rbac-forum', ['ngRoute'])
+var thisView = angular.module('rbac', ['ngRoute'])
 
-.config(['$routeProvider', function($routeProvider) {
-  $routeProvider.when('/', {
-    templateUrl: 'topic.html',
+thisView.config(function($routeProvider) {
+  // $routeProvider.when('/', {
+  //   templateUrl: '/client/index.html',
+  //   controller: 'topicCtrl'
+  // });
+  $routeProvider.when('/topics', {
+    templateUrl: './partialtemplates/topic.html',
     controller: 'topicCtrl'
   });
+  $routeProvider.when('/comments/show/:topic_id/:post_id', {
+    templateUrl: '/template/comment.html',
+    controller: 'commentCtrl'
+  });
+  $routeProvider.when('/login', {
+    templateUrl: './login.html',
+    controller: 'commentCtrl'
+  });
+  $routeProvider.when('/signup', {
+    templateUrl: './signup.html',
+    controller: 'commentCtrl'
+  });
+  
   $routeProvider.when('/posts/show/:topic_id', {
-    templateUrl: 'post.html',
+    templateUrl: './partialtemplates/post.html',
     controller: 'postCtrl'
   });
   $routeProvider.when('/comments/show/:topic_id/:post_id', {
-    templateUrl: 'comment.html',
+    templateUrl: './partialtemplates/comment.html',
     controller: 'commentCtrl'
   });
   // $routeProvider.when('/profile/', {
   //   controller: 'profileCtrl'
   // });
-}])
+});
 
-// thisView.controller('profileCtrl', ['$scope', '$http', function($scope, $http){
+// thisView.controller('profileCtrl', ['$scope', '$http', function($scope, $http)
 //   var user = $scope.user;
 //   console.log(user);
 
 // }
 // ]);
 
-thisView.controller('', ['$scope', '$http', function($scope, $http) {
-    $scope.username = username;
+thisView.controller('topicCtrl', ['$scope', '$http', function($scope, $http) {
+    // $scope.username = username;
     $scope.topics = [];
-    //$http.head("Authorization",token)
-    $http.get("/topics").success(function(topics){
-      $scope.topics = topics;
+    $http.get("https://mongo-forum-ekhaemba.c9users.io/forum/topics").success(function(topics){
+      // $scope.topics = topics;
+      if(topics.success){
+        topics.results.map(function(object){
+          $scope.topics.push(object)
+          //console.log("topic",object.topic)
+        })
+        console.log($scope.topics)
+      }
+      
     });
     
     $scope.buttonEditMode = function(){
-      if($scope.username == 'admin' ){
+      if($scope.user.role == 'ADMIN'){
         return true;
       }else{
         return false;
@@ -64,7 +75,7 @@ thisView.controller('', ['$scope', '$http', function($scope, $http) {
     // console.log($scope.username);
     $scope.savetopic = function(topic){
       if (topic.hasOwnProperty('_id')){
-        $http.put("/topics/"+topic._id, topic).success(function(topic){
+        $http.put("/forum/"+topic._id, topic).success(function(topic){
           console.log("topic saved: ",topic);
         });
       }
@@ -80,7 +91,7 @@ thisView.controller('', ['$scope', '$http', function($scope, $http) {
     
     $scope.destroy = function(topic){
       if (topic.hasOwnProperty('_id')){
-        $http.delete("/topics/"+topic._id).success(function(){
+        $http.delete("/forum/"+topic._id).success(function(){
           var index = $scope.topics.indexOf(topic);
           if (index > -1){
             $scope.topics.splice(index, 1);
@@ -90,10 +101,10 @@ thisView.controller('', ['$scope', '$http', function($scope, $http) {
     };
     
     $scope.addtopic = function(){
-      var newtopic = {name: $scope.name || "null"};
-      $http.post("/topics", newtopic).success(function(topic){
-        $scope.topics.push(topic);
-        $scope.name = '';
+      var newtopic = {topic: $scope.topic || "null"};
+      $http.post("/forum", newtopic).success(function(topic){
+        $scope.topics.push(topic.results);
+        $scope.topic = '';
       });
     };
 }]);
@@ -101,12 +112,24 @@ thisView.controller('', ['$scope', '$http', function($scope, $http) {
 
 thisView.controller('postCtrl', ['$scope', '$http','$routeParams', function($scope, $http, $routeParams) {
     $scope.topic_id = $routeParams.topic_id;
+    $scope.posts = [];
     // show topic name
-    $http.get("/topics/"+$scope.topic_id).success(function(topic){
-      $scope.topic_name = topic[0].name;
+    $http.get("/forum/"+ $scope.topic_id).success(function(response){
+      if(response.success){
+        $scope.topic_name = response.results.topic
+        console.log(response.results)
+        $scope.username = response.results.createdBy.username
+        $scope.posts = response.results.comments.map(function(comment){
+          'use strict'
+          let thisComment = comment;
+          thisComment.title = comment.comment
+          thisComment.author = comment.user == null ? "DELETED" : comment.user.username
+          thisComment.date = comment.createdAt
+          return thisComment;
+        })
+      }
     });
     
-    $scope.username = username;
     $scope.showVar = false;
     $scope.formshow = function(){
       $scope.showVar = !$scope.showVar;
@@ -121,11 +144,6 @@ thisView.controller('postCtrl', ['$scope', '$http','$routeParams', function($sco
         return false;
       }
     }
-    
-    $scope.posts = [];
-    $http.get("/posts/show/"+$scope.topic_id).success(function(posts){
-      $scope.posts = posts;
-    });
     
     $scope.createPost = function(){
       var newpost = {
@@ -145,7 +163,7 @@ thisView.controller('postCtrl', ['$scope', '$http','$routeParams', function($sco
     $scope.deletePost = function(post){
       if (post.hasOwnProperty('_id')){
         
-        $http.delete('/posts/show/'+$scope.topic_id+'/'+post._id).success(function(document){
+        $http.delete('/posts/show/'+ $scope.topic_id+'/'+post._id).success(function(document){
           var index = $scope.posts.indexOf(post);
           if (index > -1){
             $scope.posts.splice(index, 1);
@@ -157,7 +175,7 @@ thisView.controller('postCtrl', ['$scope', '$http','$routeParams', function($sco
 }]);
 
 
-thisView.controller('', ['$scope', '$http','$routeParams', function($scope, $http, $routeParams) {
+thisView.controller('commentCtrl', ['$scope', '$http','$routeParams', function($scope, $http, $routeParams) {
     $scope.topic_id = $routeParams.topic_id;
     $scope.post_id = $routeParams.post_id;
     $scope.username = username;
@@ -194,7 +212,6 @@ thisView.controller('', ['$scope', '$http','$routeParams', function($scope, $htt
       $scope.comment = '';
       console.log(comment);
       });
-      
     };
     
     $scope.deleteComment = function(comment){

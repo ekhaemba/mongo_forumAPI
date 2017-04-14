@@ -2,6 +2,8 @@ const express = require("express");
 const passport = require("passport")
 
 const deleteDoc = require("../modelFunctions/modelFunc").deleteDoc
+const findDocs = require("../modelFunctions/modelFunc").findDocs
+const findOneDoc = require("../modelFunctions/modelFunc").findOneDoc
 const updateDoc = require("../modelFunctions/modelFunc").updateDoc
 const updatePushDoc = require("../modelFunctions/modelFunc").updatePushDoc
 const populateDoc = require("../modelFunctions/modelFunc").populateDoc
@@ -38,6 +40,12 @@ forumRoutes.get("",  function(req,res){
   populateDoc({},"-__v", populateQuery, forumModel, forumFindCallback(req,res,null))
 })
 
+//Gets a list of forum Topics and their IDs
+.get("/topics",  function(req,res){
+  //Populate the comments' user reference
+  findDocs({},"topic", forumModel, forumFindCallback(req,res,null))
+})
+
 //Get a specific forum
 .get("/:forumId",  function(req,res){                                             //Populate the comments' user reference
   populateOneDoc({_id:req.params.forumId},"-__v", populateQuery, forumModel, forumFindCallback(req,res,null))
@@ -59,6 +67,7 @@ forumRoutes.get("",  function(req,res){
 //Example usage: Adding a comment on the forum as a particular user given the user is authenticated
 .post("/:forumId/newComment",  function(req,res){
   var newComment = new commentModel(req.body)//Create a new instance of the comment object using the model
+  console.log(newComment)
   newComment.save(function(err,newComment){//Save this instance
     "use strict";
     if(err){//If an error was thrown, respond with the error message
@@ -88,6 +97,37 @@ forumRoutes.get("",  function(req,res){
   deleteDoc(req.params.forumId, forumModel, forumDeleteCallback(req,res,null))
 })
 
+.delete("/:forumId/comment/:commentId",function(req, res){
+  findDocs({_id:req.params.forumId},"comments",forumModel, function(err, comments){
+    if(err){
+      res.status(401).json({success:false,message:"Error thrown"})
+    }
+    else if(!comments){
+      res.status(401).json({success:false,message:"Object not found"})
+    }
+    else if(comments.comments.length == 0){
+      res.status(401).json({success:false,message:"Comments are empty"})
+    }
+    else{
+      if(comments.comments.indexOf(req.params.commentId) < 0){
+        res.status(500).json({success:false,message:"Given comment Id not within this forum"})
+      }
+      else{
+        deleteDoc({_id:req.params.commentId},"comment",commentModel,function(err,comment){
+          if(err){
+            res.status(401).json({success:false,message:"Error thrown"})
+          }
+          else if(!comment){
+            res.status(401).json({success:false,message:"Object not found"})
+          }
+          else{
+            res.status(200).json({success:true, message:"Comment Deleted from forum"})
+          }
+        })
+      }
+    }
+  })
+})
 
 //Updates the forum properties given a forum Id
 //Example usage: Editing the forum topic given the user who created or is moderating the forum has been authenticated

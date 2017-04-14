@@ -1,7 +1,9 @@
+//All the MAC stuff
 const ROLE_ADMIN = 'ADMIN'//Priority 3
 const ROLE_MODERATOR = 'MODERATOR'//Priority 2
 const ROLE_USER = 'USER'//Priority 1
 
+//Function to get the priority level of a ROLE
 const getPriority = function(role){
     switch(role){
         case ROLE_ADMIN:

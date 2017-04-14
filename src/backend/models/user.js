@@ -2,11 +2,12 @@ var mongoose = require('mongoose')
 var Schema = mongoose.Schema
 var bcrypt = require('bcrypt')
 
+//The Roles for MAC
 const ROLE_ADMIN = require("../helpers/constants").ROLE_ADMIN,
-      ROLE_MODERATOR = require("../helpers/constants").ROLE_MODERATOR,
       ROLE_USER = require("../helpers/constants").ROLE_USER
 
-var userSchema = new Schema({
+//The user Schema the model maps to
+const userSchema = new Schema({
   userId: Schema.ObjectId,
   username : {
     type : String,
@@ -19,7 +20,7 @@ var userSchema = new Schema({
   },
   role:{
     type: String,
-    enum : [ROLE_ADMIN, ROLE_MODERATOR, ROLE_USER],
+    enum : [ROLE_ADMIN, ROLE_USER],
     default : ROLE_USER
   }
 },
