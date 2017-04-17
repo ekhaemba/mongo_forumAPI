@@ -77,21 +77,21 @@ userRoutes.get("/authenticated", requireAuth, function(req,res){
     })
 })*/
 
-.delete("/:userId", requireAuth, function(req, res){
-  if(req.user._id == req.params.userId || req.user.role == ROLE_ADMIN)
-    deleteDoc(req.params.userId, userModel, userDeleteCallback(req, res, null))
-})
+// .delete("/:userId", requireAuth, function(req, res){
+//   if(req.user._id == req.params.userId || req.user.role == ROLE_ADMIN)
+//     deleteDoc(req.params.userId, userModel, userDeleteCallback(req, res, null))
+// })
 
 //Updates a certain user properties given a certain user Id
 //Example usage: Editing a user profile given that the user has been authenticated
-.put("/:userId",  requireAuth, function(req, res, next){
-  if(req.user._id == req.params.userId)
-    updateDoc(req.params.userId, { role : ROLE_ADMIN }, {  _id : 0, password : 0, __v : 0 }, userModel, userUpdateCallback(req, res, null))
-  else
-    next()
-}, roleAuth(ROLE_ADMIN), function(req,res){
-  updateDoc(req.params.userId, { role : ROLE_ADMIN }, {  _id : 0, password : 0, __v : 0 }, userModel, userUpdateCallback(req, res, null))
-})
+// .put("/:userId",  requireAuth, function(req, res, next){
+//   if(req.user._id == req.params.userId)
+//     updateDoc(req.params.userId, { role : ROLE_ADMIN }, {  _id : 0, password : 0, __v : 0 }, userModel, userUpdateCallback(req, res, null))
+//   else
+//     next()
+// }, roleAuth(ROLE_ADMIN), function(req,res){
+//   updateDoc(req.params.userId, { role : ROLE_ADMIN }, {  _id : 0, password : 0, __v : 0 }, userModel, userUpdateCallback(req, res, null))
+// })
 
 .put("/:userId/setToAdmin", requireAuth, roleAuth(ROLE_ADMIN), function(req, res){
     updateDoc(req.params.userId, { role : ROLE_ADMIN }, { username : 1, _id : 0 }, userModel, userUpdateCallback(req, res, "User successfully promoted to Admin"))

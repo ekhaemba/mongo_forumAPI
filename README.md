@@ -12,7 +12,8 @@
 ### Run with nodemon(Will continuously re-run upon file changes)
 * `npm run watchman`
 
-BASE_URL = https://mongo-forum-ekhaemba.c9users.io
+PORT = 8080
+Then go to: <Your Domain>:PORT/static to access the APP
 
 |Endpoint|Description|HTTP Method|
 |:-:|:-:|:-:|

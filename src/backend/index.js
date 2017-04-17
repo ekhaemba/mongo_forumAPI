@@ -33,8 +33,11 @@ router.use(forumRoutes)
 router.use(commentRoutes);
 
 app.use(cors())
-//Declare a static web server to serve client-side files on the BASE_URL+'/static' endpoint
-app.use('/static',express.static(path.join(__dirname, '../client')));
+
+//Declare a static web server to serve ONE client-side file on the BASE_URL+'/static' endpoint
+app.use('/static',function(req,res){
+      res.sendFile(path.join(__dirname, '../client/index.html'))
+});
 //Morgan middleware to log all requests made to the server
 app.use(morgan('combined'))
 //Use the API routes
