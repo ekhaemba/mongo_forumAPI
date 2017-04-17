@@ -304,7 +304,6 @@ thisView.controller('commentCtrl', ['$scope', '$http','$routeParams','authFuncs'
         thisComment.id = comment._id
         $scope.comments.push(thisComment);
         $scope.newcomment = '';
-        console.log(comment);
       });
     };
     
