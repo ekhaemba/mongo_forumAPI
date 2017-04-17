@@ -13,7 +13,7 @@
 * `npm run watchman`
 
 PORT = 8080
-Then go to: <Your Domain>:PORT/static to access the APP
+Then go to: [your.domain:PORT/static]() to access the APP
 
 |Endpoint|Description|HTTP Method|
 |:-:|:-:|:-:|
