@@ -25,7 +25,7 @@ const register = function (req, res){
       //Otherwise return it succeeded, the message and this userId
       //Note: Here might be where I redirect you to the login page
       else{
-        res.status(200).json({success : true, message : "User has been successfully added", userId : user._id})
+        res.status(200).json({success : true, message : "User has been successfully added" })
       }
     })
   }
@@ -47,7 +47,7 @@ const login = function(req, res){
     else{
       user.comparePassword(req.body.password, function(err, isMatch){
         if(!err && isMatch){
-            res.status(200).json({success: true, token: `JWT ${genToken(user)}`})
+            res.status(200).json({success: true, token: genToken(user), role : user.role, id : user._id })
         }else{
             res.status(401).json({success: false, message: 'Authentication failed. Passwords did not match'})
         }
